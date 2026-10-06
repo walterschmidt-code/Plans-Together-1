@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plans Together</title>
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #60a5fa;
+        }
+
+        h2 {
+            color: #e2e8f0;
+        }
+
+        #calendar,
+        #terminForm {
+            max-width: 700px;
+            margin: 0 auto 30px auto;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 18px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .calendar-header button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 15px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .calendar-header button:hover {
+            background: #3b82f6;
+        }
+
+        #monthYear {
+            margin: 0;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 10px;
+        }
+
+        #days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        #days button {
+            position: relative;
+            background: #334155;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        #days button:hover {
+            background: #475569;
+        }
+
+        #days button.selected {
+            background: #2563eb;
+        }
+
+        #days button.has-appointment::after {
+            content: "";
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #ef4444;
+        }
+
+        #terminForm {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        #terminForm input {
+            background: #0f172a;
+            color: white;
+            border: 1px solid #475569;
+            border-radius: 10px;
+            padding: 13px;
+            font-size: 15px;
+        }
+
+        #terminForm input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        #ortSuchen,
+        #mapToggle,
+        #terminForm button[type="submit"] {
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 13px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        #ortSuchen:hover,
+        #mapToggle:hover,
+        #terminForm button[type="submit"]:hover {
+            background: #3b82f6;
+        }
+
+        #map {
+            display: none;
+            height: 300px;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+
+        #map.open {
+            display: block;
+        }
+
+        #calendar {
+            display: none;
+        }
+
+        #calendar.open {
+            display: block;
+        }
+
+        #status {
+            text-align: center;
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 15px;
+            }
+
+            #calendar,
+            #terminForm {
+                padding: 18px;
+            }
+
+            #days {
+                gap: 4px;
+            }
+
+            #days button {
+                padding: 9px 5px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Plans Together</h1>
+
+<div id="calendar">
+
+    <div class="calendar-header">
+        <button type="button" id="prevMonth">←</button>
+
+        <h2 id="monthYear"></h2>
+
+        <button type="button" id="nextMonth">→</button>
+    </div>
+
+    <div class="weekdays">
+        <div>Mo</div>
+        <div>Di</div>
+        <div>Mi</div>
+        <div>Do</div>
+        <div>Fr</div>
+        <div>Sa</div>
+        <div>So</div>
+    </div>
+
+    <div id="days"></div>
+
+</div>
+
+<h2>Treffen hinzufügen</h2>
+
+<form id="terminForm">
+
+    <input
+        id="titel"
+        type="text"
+        placeholder="Titel"
+        required
+    >
+
+    <input
+        id="beschreibung"
+        type="text"
+        placeholder="Beschreibung"
+    >
+
+    <input
+        id="datum"
+        type="text"
+        placeholder="📅 Datum auswählen"
+        readonly
+        required
+    >
+
+    <button type="button" id="datumToggle">
+        📅 Kalender öffnen
+    </button>
+
+    <input
+        id="uhrzeit"
+        type="time"
+        required
+    >
+
+    <input
+        id="ort"
+        type="text"
+        placeholder="Ort"
+    >
+
+    <button type="button" id="ortSuchen">
+        📍 Ort suchen
+    </button>
+
+    <button type="button" id="mapToggle">
+        🗺️ Karte anzeigen
+    </button>
+
+    <div id="map"></div>
+
+    <input
+        id="einladungscode"
+        type="text"
+        placeholder="Einladungscode"
+    >
+
+    <button type="submit">
+        Termin erstellen
+    </button>
+
+</form>
+
+<p id="status"></p>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script type="module">
+
+import { supabase } from './supabase.js'
+
+
+/* =========================
+   KARTE
+========================= */
+
+const map = L.map('map').setView(
+    [51.3397, 12.3731],
+    13
+)
+
+L.tileLayer(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {
+        attribution: '&copy; OpenStreetMap contributors'
+    }
+).addTo(map)
+
+
+const mapToggle = document.getElementById('mapToggle')
+const mapContainer = document.getElementById('map')
+
+mapToggle.addEventListener('click', () => {
+
+    mapContainer.classList.toggle('open')
+
+    if (mapContainer.classList.contains('open')) {
+
+        mapToggle.textContent = '🗺️ Karte schließen'
+
+        setTimeout(() => {
+            map.invalidateSize()
+        }, 100)
+
+    } else {
+
+        mapToggle.textContent = '🗺️ Karte anzeigen'
+
+    }
+
+})
+
+
+/* =========================
+   FORMULAR
+========================= */
+
+const form = document.getElementById('terminForm')
+const status = document.getElementById('status')
+
+const ortInput = document.getElementById('ort')
+const ortSuchen = document.getElementById('ortSuchen')
+
+let marker = null
+
+let ausgewählteBreitengrad = null
+let ausgewählteLaengengrad = null
+
+
+/* =========================
+   ORT SUCHEN
+========================= */
+
+ortSuchen.addEventListener('click', async () => {
+
+    const ort = ortInput.value.trim()
+
+    if (!ort) {
+        alert('Bitte zuerst einen Ort eingeben.')
+        return
+    }
+
+    try {
+
+        const response = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(ort)}`
+        )
+
+        const results = await response.json()
+
+        if (results.length === 0) {
+
+            alert('Ort wurde nicht gefunden.')
+            return
+
+        }
+
+        const lat = Number(results[0].lat)
+        const lon = Number(results[0].lon)
+
+        ausgewählteBreitengrad = lat
+        ausgewählteLaengengrad = lon
+
+
+        // Karte automatisch öffnen
+
+        mapContainer.classList.add('open')
+        mapToggle.textContent = '🗺️ Karte schließen'
+
+
+        setTimeout(() => {
+
+            map.invalidateSize()
+
+            map.setView(
+                [lat, lon],
+                16
+            )
+
+        }, 100)
+
+
+        if (marker) {
+
+            marker.setLatLng([
+                lat,
+                lon
+            ])
+
+        } else {
+
+            marker = L.marker([
+                lat,
+                lon
+            ]).addTo(map)
+
+        }
+
+
+        marker
+            .bindPopup(results[0].display_name)
+            .openPopup()
+
+
+    } catch (error) {
+
+        console.error(error)
+
+        alert('Fehler bei der Ortssuche.')
+
+    }
+
+})
+
+
+/* =========================
+   TERMIN SPEICHERN
+========================= */
+
+form.addEventListener('submit', async (event) => {
+
+    event.preventDefault()
+
+
+    const { error } = await supabase
+        .from('Terminplaner')
+        .insert({
+
+            Titel:
+                document.getElementById('titel').value,
+
+            Beschreibung:
+                document.getElementById('beschreibung').value,
+
+            Datum:
+                document.getElementById('datum').value,
+
+            Uhrzeit:
+                document.getElementById('uhrzeit').value,
+
+            Ort:
+                document.getElementById('ort').value,
+
+            Einladungscode:
+                document.getElementById('einladungscode').value,
+
+            Breitengrad:
+                ausgewählteBreitengrad,
+
+            Laengengrad:
+                ausgewählteLaengengrad
+
+        })
+
+
+    if (error) {
+
+        console.error(error)
+
+        status.textContent =
+            '❌ Fehler: ' + error.message
+
+        return
+
+    }
+
+
+    status.textContent =
+        '✅ Termin wurde gespeichert!'
+
+    form.reset()
+
+})
+
+
+/* =========================
+   KALENDER
+========================= */
+
+const daysContainer =
+    document.getElementById('days')
+
+const monthYear =
+    document.getElementById('monthYear')
+
+const prevMonth =
+    document.getElementById('prevMonth')
+
+const nextMonth =
+    document.getElementById('nextMonth')
+
+const datumInput =
+    document.getElementById('datum')
+
+const datumToggle =
+    document.getElementById('datumToggle')
+
+const calendar =
+    document.getElementById('calendar')
+
+
+/* Kalender öffnen/schließen */
+
+datumToggle.addEventListener('click', () => {
+
+    calendar.classList.toggle('open')
+
+    if (calendar.classList.contains('open')) {
+
+        datumToggle.textContent =
+            '📅 Kalender schließen'
+
+    } else {
+
+        datumToggle.textContent =
+            '📅 Kalender öffnen'
+
+    }
+
+})
+
+
+let currentDate = new Date()
+
+
+function renderCalendar() {
+
+    daysContainer.innerHTML = ''
+
+    const year =
+        currentDate.getFullYear()
+
+    const month =
+        currentDate.getMonth()
+
+
+    const monthNames = [
+        'Januar',
+        'Februar',
+        'März',
+        'April',
+        'Mai',
+        'Juni',
+        'Juli',
+        'August',
+        'September',
+        'Oktober',
+        'November',
+        'Dezember'
+    ]
+
+
+    monthYear.textContent =
+        `${monthNames[month]} ${year}`
+
+
+    const firstDay =
+        new Date(year, month, 1)
+
+    const lastDay =
+        new Date(year, month + 1, 0)
+
+
+    let startDay =
+        firstDay.getDay()
+
+    if (startDay === 0) {
+        startDay = 7
+    }
+
+
+    for (
+        let i = 1;
+        i < startDay;
+        i++
+    ) {
+
+        const emptyDay =
+            document.createElement('div')
+
+        daysContainer.appendChild(
+            emptyDay
+        )
+
+    }
+
+
+    for (
+        let day = 1;
+        day <= lastDay.getDate();
+        day++
+    ) {
+
+        const dayElement =
+            document.createElement('button')
+
+        dayElement.textContent = day
+
+        dayElement.type = 'button'
+
+
+        dayElement.addEventListener(
+            'click',
+            () => {
+
+                const selectedDate =
+                    `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+
+
+                datumInput.value =
+                    selectedDate
+
+
+                document
+                    .querySelectorAll('#days button')
+                    .forEach(button => {
+
+                        button.classList.remove(
+                            'selected'
+                        )
+
+                    })
+
+
+                dayElement.classList.add(
+                    'selected'
+                )
+
+
+                calendar.classList.remove(
+                    'open'
+                )
+
+                datumToggle.textContent =
+                    '📅 Kalender öffnen'
+
+            }
+        )
+
+
+        daysContainer.appendChild(
+            dayElement
+        )
+
+    }
+
+}
+
+
+/* Monat zurück */
+
+prevMonth.addEventListener('click', () => {
+
+    currentDate.setMonth(
+        currentDate.getMonth() - 1
+    )
+
+    renderCalendar()
+
+})
+
+
+/* Monat vor */
+
+nextMonth.addEventListener('click', () => {
+
+    currentDate.setMonth(
+        currentDate.getMonth() + 1
+    )
+
+    renderCalendar()
+
+})
+
+
+renderCalendar()
+
+
+/* =========================
+   TERMINE IM KALENDER
+========================= */
+
+async function loadAppointments() {
+
+    const { data, error } =
+        await supabase
+            .from('Terminplaner')
+            .select(
+                'Titel, Beschreibung, Datum, Uhrzeit, Ort'
+            )
+
+
+    if (error) {
+
+        console.error(error)
+
+        return
+
+    }
+
+
+    console.log(
+        'Termine:',
+        data
+    )
+
+
+    data.forEach(termin => {
+
+        const [
+            year,
+            month,
+            day
+        ] = termin.Datum.split('-')
+
+
+        if (
+            Number(year) ===
+                currentDate.getFullYear()
+            &&
+            Number(month) - 1 ===
+                currentDate.getMonth()
+        ) {
+
+            const buttons =
+                document.querySelectorAll(
+                    '#days button'
+                )
+
+
+            buttons.forEach(button => {
+
+                if (
+                    Number(button.textContent)
+                    === Number(day)
+                ) {
+
+                    button.classList.add(
+                        'has-appointment'
+                    )
+
+                    button.title =
+                        `${termin.Titel} – ${termin.Uhrzeit}`
+
+                }
+
+            })
+
+        }
+
+    })
+
+}
+
+
+loadAppointments()
+
+</script>
+
+</body>
+</html>
