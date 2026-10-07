@@ -310,6 +310,23 @@
 </form>
 
 <p id="status"></p>
+<div id="einladung" style="display:none; max-width:700px; margin:30px auto; background:#1e293b; border:1px solid #334155; border-radius:18px; padding:25px;">
+
+    <h2 id="einladungTitel"></h2>
+
+    <p id="einladungBeschreibung"></p>
+
+    <p>📅 <strong id="einladungDatum"></strong></p>
+
+    <p>🕐 <strong id="einladungUhrzeit"></strong></p>
+
+    <p>📍 <strong id="einladungOrt"></strong></p>
+
+    <button id="teilnehmenButton">
+        ✅ Ich nehme teil
+    </button>
+
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -845,7 +862,60 @@ async function loadAppointments() {
 
 
 loadAppointments()
+/* =========================
+   EINLADUNG ANZEIGEN
+========================= */
 
+const inviteCode =
+    new URLSearchParams(window.location.search).get('invite')
+
+if (inviteCode) {
+
+    const { data, error } =
+        await supabase
+            .from('Terminplaner')
+            .select(
+                'Titel, Beschreibung, Datum, Uhrzeit, Ort, Breitengrad, Laengengrad'
+            )
+            .eq('Einladungscode', inviteCode)
+            .single()
+
+    if (error || !data) {
+
+        document.getElementById('einladung').style.display = 'block'
+
+        document.getElementById('einladungTitel').textContent =
+            '❌ Termin nicht gefunden'
+
+        document.getElementById('einladungBeschreibung').textContent =
+            'Der Einladungslink ist ungültig oder abgelaufen.'
+
+    } else {
+
+        document.getElementById('calendar').style.display = 'none'
+        document.getElementById('terminForm').style.display = 'none'
+        document.querySelector('body > h2').style.display = 'none'
+
+        document.getElementById('einladung').style.display = 'block'
+
+        document.getElementById('einladungTitel').textContent =
+            data.Titel
+
+        document.getElementById('einladungBeschreibung').textContent =
+            data.Beschreibung || ''
+
+        document.getElementById('einladungDatum').textContent =
+            data.Datum
+
+        document.getElementById('einladungUhrzeit').textContent =
+            data.Uhrzeit
+
+        document.getElementById('einladungOrt').textContent =
+            data.Ort || 'Kein Ort angegeben'
+
+    }
+
+}
 </script>
 
 </body>
