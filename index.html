@@ -868,6 +868,8 @@ loadAppointments()
 
 const inviteCode =
     new URLSearchParams(window.location.search).get('invite')
+    alert("Invite-Code: " + inviteCode)
+
 
 if (inviteCode) {
 
@@ -912,9 +914,55 @@ if (inviteCode) {
 
         document.getElementById('einladungOrt').textContent =
             data.Ort || 'Kein Ort angegeben'
+            const teilnehmenButton =
+    document.getElementById('teilnehmenButton')
+
+teilnehmenButton.addEventListener('click', async () => {
+
+    const istDabei =
+        teilnehmenButton.dataset.dabei === 'true'
+
+    const neuerStatus =
+        istDabei ? 'Nicht dabei' : 'Dabei'
+
+    const { error } =
+        await supabase
+            .from('Terminplaner')
+            .update({
+                Teilnehmer: neuerStatus
+            })
+            .eq('Einladungscode', inviteCode)
+
+    if (error) {
+
+        console.error(error)
+
+        alert('Fehler beim Speichern.')
+
+        return
+    }
+
+    if (istDabei) {
+
+        teilnehmenButton.textContent =
+            '✅ Ich nehme teil'
+
+        teilnehmenButton.dataset.dabei =
+            'false'
+
+    } else {
+
+        teilnehmenButton.textContent =
+            '❌ Ich nehme nicht teil'
+
+        teilnehmenButton.dataset.dabei =
+            'true'
 
     }
 
+})
+
+}
 }
 </script>
 
