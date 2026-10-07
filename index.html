@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Plans Together</title>
+    <title>Plans Together</title>
 
     <link
         rel="stylesheet"
@@ -175,8 +175,32 @@
         }
 
         #status {
+            max-width: 700px;
+            margin: 20px auto;
             text-align: center;
             font-weight: bold;
+        }
+
+        #status input {
+            background: #1e293b;
+            color: white;
+            border: 1px solid #475569;
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 8px;
+        }
+
+        #linkKopieren {
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+
+        #linkKopieren:hover {
+            background: #3b82f6;
         }
 
         @media (max-width: 600px) {
@@ -278,12 +302,6 @@
     </button>
 
     <div id="map"></div>
-
-    <input
-        id="einladungscode"
-        type="text"
-        placeholder="Einladungscode"
-    >
 
     <button type="submit">
         Termin erstellen
@@ -391,12 +409,8 @@ ortSuchen.addEventListener('click', async () => {
         ausgewählteBreitengrad = lat
         ausgewählteLaengengrad = lon
 
-
-        // Karte automatisch öffnen
-
         mapContainer.classList.add('open')
         mapToggle.textContent = '🗺️ Karte schließen'
-
 
         setTimeout(() => {
 
@@ -451,6 +465,12 @@ form.addEventListener('submit', async (event) => {
 
     event.preventDefault()
 
+    const einladungscode =
+        crypto.randomUUID()
+            .replaceAll('-', '')
+            .substring(0, 8)
+            .toUpperCase()
+
 
     const { error } = await supabase
         .from('Terminplaner')
@@ -472,7 +492,7 @@ form.addEventListener('submit', async (event) => {
                 document.getElementById('ort').value,
 
             Einladungscode:
-                document.getElementById('einladungscode').value,
+                einladungscode,
 
             Breitengrad:
                 ausgewählteBreitengrad,
@@ -495,10 +515,63 @@ form.addEventListener('submit', async (event) => {
     }
 
 
-    status.textContent =
-        '✅ Termin wurde gespeichert!'
+    const einladungslink =
+        `${window.location.origin}${window.location.pathname}?invite=${einladungscode}`
+
+
+    status.innerHTML = `
+        ✅ Termin wurde gespeichert!<br><br>
+
+        🔗 <strong>Einladungslink:</strong><br>
+
+        <input
+            type="text"
+            value="${einladungslink}"
+            readonly
+            style="width:100%;"
+        >
+
+        <br><br>
+
+        <button
+            type="button"
+            id="linkKopieren"
+        >
+            📋 Link kopieren
+        </button>
+    `
+
+
+    document
+        .getElementById('linkKopieren')
+        .addEventListener('click', async () => {
+
+            try {
+
+                await navigator.clipboard.writeText(
+                    einladungslink
+                )
+
+                document.getElementById(
+                    'linkKopieren'
+                ).textContent =
+                    '✅ Link kopiert!'
+
+            } catch {
+
+                alert(
+                    'Der Link konnte nicht automatisch kopiert werden.'
+                )
+
+            }
+
+        })
+
 
     form.reset()
+
+    ausgewählteBreitengrad = null
+    ausgewählteLaengengrad = null
 
 })
 
@@ -528,8 +601,6 @@ const datumToggle =
 const calendar =
     document.getElementById('calendar')
 
-
-/* Kalender öffnen/schließen */
 
 datumToggle.addEventListener('click', () => {
 
@@ -677,8 +748,6 @@ function renderCalendar() {
 }
 
 
-/* Monat zurück */
-
 prevMonth.addEventListener('click', () => {
 
     currentDate.setMonth(
@@ -689,8 +758,6 @@ prevMonth.addEventListener('click', () => {
 
 })
 
-
-/* Monat vor */
 
 nextMonth.addEventListener('click', () => {
 
@@ -727,12 +794,6 @@ async function loadAppointments() {
         return
 
     }
-
-
-    console.log(
-        'Termine:',
-        data
-    )
 
 
     data.forEach(termin => {
