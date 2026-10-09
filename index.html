@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -11,6 +12,18 @@
     >
 
     <style>
+        :root {
+            color-scheme: dark;
+            --bg: #10131b;
+            --panel: #1b202c;
+            --panel-light: #252c3b;
+            --text: #f3f5fa;
+            --muted: #a9b2c5;
+            --accent: #6c8cff;
+            --border: #343d50;
+            --red: #ff6577;
+        }
+
         * {
             box-sizing: border-box;
         }
@@ -18,953 +31,816 @@
         body {
             margin: 0;
             min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
             font-family: Arial, sans-serif;
-            background: #0f172a;
-            color: #f8fafc;
-            padding: 30px;
         }
 
-        h1 {
+        header {
+            padding: 24px 16px;
             text-align: center;
-            margin-bottom: 30px;
-            color: #60a5fa;
+            background: #171c27;
+            border-bottom: 1px solid var(--border);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 30px;
+        }
+
+        header p {
+            margin: 8px 0 0;
+            color: var(--muted);
+        }
+
+        main {
+            width: min(100% - 28px, 850px);
+            margin: 28px auto;
+        }
+
+        .panel {
+            padding: 22px;
+            margin-bottom: 22px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
         }
 
         h2 {
-            color: #e2e8f0;
+            margin-top: 0;
         }
 
-        #calendar,
-        #terminForm {
-            max-width: 700px;
-            margin: 0 auto 30px auto;
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 18px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        label {
+            display: block;
+            margin: 16px 0 7px;
+            font-weight: bold;
+        }
+
+        input,
+        textarea,
+        button {
+            font: inherit;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            color: var(--text);
+            background: #111620;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+        }
+
+        textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 1px;
+        }
+
+        button {
+            padding: 11px 15px;
+            color: white;
+            background: var(--accent);
+            border: 0;
+            border-radius: 9px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            filter: brightness(1.1);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .secondary {
+            background: var(--panel-light);
+            border: 1px solid var(--border);
         }
 
         .calendar-header {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            margin-bottom: 20px;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
         }
 
-        .calendar-header button {
-            background: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            padding: 10px 15px;
-            font-size: 18px;
-            cursor: pointer;
-        }
-
-        .calendar-header button:hover {
-            background: #3b82f6;
-        }
-
-        #monthYear {
+        .calendar-header h2 {
             margin: 0;
-        }
-
-        .weekdays {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
             text-align: center;
-            color: #94a3b8;
-            margin-bottom: 10px;
+            font-size: 20px;
         }
 
+        .weekdays,
         #days {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 6px;
         }
 
-        #days button {
+        .weekdays div {
+            text-align: center;
+            color: var(--muted);
+            font-size: 12px;
+            padding: 6px 0;
+        }
+
+        .day {
             position: relative;
-            background: #334155;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            padding: 12px;
-            cursor: pointer;
-            font-size: 15px;
+            min-width: 0;
+            min-height: 44px;
+            padding: 8px 2px;
+            background: var(--panel-light);
+            border: 1px solid transparent;
         }
 
-        #days button:hover {
-            background: #475569;
+        .day.empty {
+            visibility: hidden;
         }
 
-        #days button.selected {
-            background: #2563eb;
+        .day.selected {
+            border-color: var(--accent);
+            background: #35446d;
         }
 
-        #days button.has-appointment::after {
+        .day.today {
+            box-shadow: inset 0 0 0 1px #a9bbff;
+        }
+
+        .day.has-appointment::after {
             content: "";
             position: absolute;
-            bottom: 5px;
-            left: 50%;
-            transform: translateX(-50%);
             width: 6px;
             height: 6px;
+            bottom: 5px;
+            left: calc(50% - 3px);
+            background: var(--red);
             border-radius: 50%;
-            background: #ef4444;
         }
 
-        #terminForm {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        #terminForm input {
-            background: #0f172a;
-            color: white;
-            border: 1px solid #475569;
-            border-radius: 10px;
-            padding: 13px;
-            font-size: 15px;
-        }
-
-        #terminForm input:focus {
-            outline: none;
-            border-color: #3b82f6;
-        }
-
-        #ortSuchen,
-        #mapToggle,
-        #terminForm button[type="submit"] {
-            background: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            padding: 13px;
-            font-size: 15px;
-            cursor: pointer;
-        }
-
-        #ortSuchen:hover,
-        #mapToggle:hover,
-        #terminForm button[type="submit"]:hover {
-            background: #3b82f6;
+        .hint,
+        .muted {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
         }
 
         #map {
-            display: none;
-            height: 300px;
             width: 100%;
-            border-radius: 12px;
+            height: 300px;
+            margin-top: 12px;
+            border-radius: 10px;
             overflow: hidden;
-            margin: 5px 0;
         }
 
-        #map.open {
-            display: block;
+        .map-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
         }
 
-        #calendar {
-            display: none;
+        .map-controls input {
+            min-width: 0;
+            flex: 1;
         }
 
-        #calendar.open {
-            display: block;
+        .map-controls button {
+            flex-shrink: 0;
         }
 
-        #status {
-            max-width: 700px;
-            margin: 20px auto;
-            text-align: center;
+        .main-button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 14px;
             font-weight: bold;
         }
 
-        #status input {
-            background: #1e293b;
-            color: white;
-            border: 1px solid #475569;
+        .status {
+            margin-top: 14px;
+            overflow-wrap: anywhere;
+            line-height: 1.5;
+        }
+
+        .appointment {
+            padding: 14px;
+            margin-top: 12px;
+            background: #141a25;
+            border: 1px solid var(--border);
             border-radius: 10px;
-            padding: 10px;
-            margin-top: 8px;
         }
 
-        #linkKopieren {
-            background: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            padding: 10px 15px;
-            cursor: pointer;
+        .appointment h3 {
+            margin: 0 0 8px;
         }
 
-        #linkKopieren:hover {
-            background: #3b82f6;
+        .appointment p {
+            margin: 5px 0;
+            color: var(--muted);
         }
 
-        @media (max-width: 600px) {
-            body {
+        .appointment button {
+            margin-top: 10px;
+        }
+
+        .share-link {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .share-link input {
+            min-width: 0;
+            flex: 1;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 480px) {
+            .panel {
                 padding: 15px;
             }
 
-            #calendar,
-            #terminForm {
-                padding: 18px;
+            .calendar-header button {
+                padding: 9px;
             }
 
-            #days {
-                gap: 4px;
+            .day {
+                min-height: 39px;
+                font-size: 13px;
             }
 
-            #days button {
-                padding: 9px 5px;
+            .map-controls,
+            .share-link {
+                flex-direction: column;
+            }
+
+            .map-controls button,
+            .share-link button {
+                width: 100%;
             }
         }
     </style>
 </head>
 
 <body>
+<header>
+    <h1>Plans Together</h1>
+    <p>Gemeinsam Termine planen.</p>
+</header>
 
-<h1>Plans Together</h1>
+<main>
+    <section id="inviteView" class="panel" hidden>
+        <h2 id="inviteTitle">Termin wird geladen ...</h2>
+        <p id="inviteDescription" class="muted"></p>
 
-<div id="calendar">
+        <div class="appointment">
+            <p><strong>Datum:</strong> <span id="inviteDate"></span></p>
+            <p><strong>Uhrzeit:</strong> <span id="inviteTime"></span></p>
+            <p><strong>Ort:</strong> <span id="invitePlace"></span></p>
+        </div>
 
-    <div class="calendar-header">
-        <button type="button" id="prevMonth">←</button>
+        <p id="inviteStatus" class="status" role="status"></p>
+        <button id="backButton" class="secondary" type="button">
+            Zur Startseite
+        </button>
+    </section>
 
-        <h2 id="monthYear"></h2>
+    <div id="mainView">
+        <section class="panel">
+            <div class="calendar-header">
+                <button id="prevMonth" class="secondary" type="button"
+                    aria-label="Vorheriger Monat">←</button>
+                <h2 id="monthYear">Kalender</h2>
+                <button id="nextMonth" class="secondary" type="button"
+                    aria-label="Nächster Monat">→</button>
+            </div>
 
-        <button type="button" id="nextMonth">→</button>
+            <div class="weekdays">
+                <div>Mo</div>
+                <div>Di</div>
+                <div>Mi</div>
+                <div>Do</div>
+                <div>Fr</div>
+                <div>Sa</div>
+                <div>So</div>
+            </div>
+
+            <div id="days"></div>
+            <p class="hint">Wähle einen Tag aus. Rote Punkte markieren Tage mit Terminen.</p>
+        </section>
+
+        <section class="panel">
+            <h2>Termine in diesem Monat</h2>
+            <div id="appointmentList" class="muted">Termine werden geladen ...</div>
+        </section>
+
+        <section class="panel">
+            <h2>Neuen Termin erstellen</h2>
+
+            <form id="terminForm">
+                <label for="titel">Titel *</label>
+                <input id="titel" name="titel" maxlength="150"
+                    placeholder="z. B. Kinoabend" required>
+
+                <label for="beschreibung">Beschreibung</label>
+                <textarea id="beschreibung" name="beschreibung"
+                    maxlength="2000"
+                    placeholder="Was habt ihr vor?"></textarea>
+
+                <label for="datum">Datum *</label>
+                <input id="datum" name="datum" type="date" required>
+
+                <label for="uhrzeit">Uhrzeit *</label>
+                <input id="uhrzeit" name="uhrzeit" type="time" required>
+
+                <label for="ort">Ort</label>
+                <input id="ort" name="ort"
+                    placeholder="Adresse oder Treffpunkt">
+
+                <label>Ort auf der Karte auswählen (optional)</label>
+                <p class="hint">
+                    Suche eine Adresse oder klicke auf die Karte.
+                    Du kannst den Ort auch einfach als Text eintragen.
+                </p>
+
+                <div class="map-controls">
+                    <input id="mapSearch" placeholder="Adresse suchen">
+                    <button id="searchPlace" type="button">Suchen</button>
+                </div>
+
+                <div id="map"></div>
+                <p id="mapStatus" class="hint" role="status"></p>
+
+                <button class="main-button" id="createButton" type="submit">
+                    Termin erstellen
+                </button>
+            </form>
+
+            <p id="status" class="status" role="status"></p>
+
+            <div id="createdResult" hidden>
+                <h3>Termin erstellt!</h3>
+                <p class="hint">Teile diesen Link mit den eingeladenen Personen:</p>
+                <div class="share-link">
+                    <input id="createdLink" readonly aria-label="Einladungslink">
+                    <button id="copyLink" type="button">Link kopieren</button>
+                </div>
+            </div>
+        </section>
     </div>
-
-    <div class="weekdays">
-        <div>Mo</div>
-        <div>Di</div>
-        <div>Mi</div>
-        <div>Do</div>
-        <div>Fr</div>
-        <div>Sa</div>
-        <div>So</div>
-    </div>
-
-    <div id="days"></div>
-
-</div>
-
-<h2>Treffen hinzufügen</h2>
-
-<form id="terminForm">
-
-    <input
-        id="titel"
-        type="text"
-        placeholder="Titel"
-        required
-    >
-
-    <input
-        id="beschreibung"
-        type="text"
-        placeholder="Beschreibung"
-    >
-
-    <input
-        id="datum"
-        type="text"
-        placeholder="📅 Datum auswählen"
-        readonly
-        required
-    >
-
-    <button type="button" id="datumToggle">
-        📅 Kalender öffnen
-    </button>
-
-    <input
-        id="uhrzeit"
-        type="time"
-        required
-    >
-
-    <input
-        id="ort"
-        type="text"
-        placeholder="Ort"
-    >
-
-    <button type="button" id="ortSuchen">
-        📍 Ort suchen
-    </button>
-
-    <button type="button" id="mapToggle">
-        🗺️ Karte anzeigen
-    </button>
-
-    <div id="map"></div>
-
-    <button type="submit">
-        Termin erstellen
-    </button>
-
-</form>
-
-<p id="status"></p>
-<div id="einladung" style="display:none; max-width:700px; margin:30px auto; background:#1e293b; border:1px solid #334155; border-radius:18px; padding:25px;">
-
-    <h2 id="einladungTitel"></h2>
-
-    <p id="einladungBeschreibung"></p>
-
-    <p>📅 <strong id="einladungDatum"></strong></p>
-
-    <p>🕐 <strong id="einladungUhrzeit"></strong></p>
-
-    <p>📍 <strong id="einladungOrt"></strong></p>
-
-    <button id="teilnehmenButton">
-        ✅ Ich nehme teil
-    </button>
-
-</div>
+</main>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script type="module">
+    import { supabase } from './supabase.js';
 
-import { supabase } from './supabase.js'
+    const $ = (id) => document.getElementById(id);
 
+    const form = $('terminForm');
+    const dateInput = $('datum');
+    const statusElement = $('status');
+    const createButton = $('createButton');
 
-/* =========================
-   KARTE
-========================= */
-
-const map = L.map('map').setView(
-    [51.3397, 12.3731],
-    13
-)
-
-L.tileLayer(
-    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    {
-        attribution: '&copy; OpenStreetMap contributors'
-    }
-).addTo(map)
-
-
-const mapToggle = document.getElementById('mapToggle')
-const mapContainer = document.getElementById('map')
-
-mapToggle.addEventListener('click', () => {
-
-    mapContainer.classList.toggle('open')
-
-    if (mapContainer.classList.contains('open')) {
-
-        mapToggle.textContent = '🗺️ Karte schließen'
-
-        setTimeout(() => {
-            map.invalidateSize()
-        }, 100)
-
-    } else {
-
-        mapToggle.textContent = '🗺️ Karte anzeigen'
-
-    }
-
-})
-
-
-/* =========================
-   FORMULAR
-========================= */
-
-const form = document.getElementById('terminForm')
-const status = document.getElementById('status')
-
-const ortInput = document.getElementById('ort')
-const ortSuchen = document.getElementById('ortSuchen')
-
-let marker = null
-
-let ausgewählteBreitengrad = null
-let ausgewählteLaengengrad = null
-
-
-/* =========================
-   ORT SUCHEN
-========================= */
-
-ortSuchen.addEventListener('click', async () => {
-
-    const ort = ortInput.value.trim()
-
-    if (!ort) {
-        alert('Bitte zuerst einen Ort eingeben.')
-        return
-    }
-
-    try {
-
-        const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(ort)}`
-        )
-
-        const results = await response.json()
-
-        if (results.length === 0) {
-
-            alert('Ort wurde nicht gefunden.')
-            return
-
-        }
-
-        const lat = Number(results[0].lat)
-        const lon = Number(results[0].lon)
-
-        ausgewählteBreitengrad = lat
-        ausgewählteLaengengrad = lon
-
-        mapContainer.classList.add('open')
-        mapToggle.textContent = '🗺️ Karte schließen'
-
-        setTimeout(() => {
-
-            map.invalidateSize()
-
-            map.setView(
-                [lat, lon],
-                16
-            )
-
-        }, 100)
-
-
-        if (marker) {
-
-            marker.setLatLng([
-                lat,
-                lon
-            ])
-
-        } else {
-
-            marker = L.marker([
-                lat,
-                lon
-            ]).addTo(map)
-
-        }
-
-
-        marker
-            .bindPopup(results[0].display_name)
-            .openPopup()
-
-
-    } catch (error) {
-
-        console.error(error)
-
-        alert('Fehler bei der Ortssuche.')
-
-    }
-
-})
-
-
-/* =========================
-   TERMIN SPEICHERN
-========================= */
-
-form.addEventListener('submit', async (event) => {
-
-    event.preventDefault()
-
-    const einladungscode =
-        crypto.randomUUID()
-            .replaceAll('-', '')
-            .substring(0, 8)
-            .toUpperCase()
-
-
-    const { error } = await supabase
-        .from('Terminplaner')
-        .insert({
-
-            Titel:
-                document.getElementById('titel').value,
-
-            Beschreibung:
-                document.getElementById('beschreibung').value,
-
-            Datum:
-                document.getElementById('datum').value,
-
-            Uhrzeit:
-                document.getElementById('uhrzeit').value,
-
-            Ort:
-                document.getElementById('ort').value,
-
-            Einladungscode:
-                einladungscode,
-
-            Breitengrad:
-                ausgewählteBreitengrad,
-
-            Laengengrad:
-                ausgewählteLaengengrad
-
-        })
-
-
-    if (error) {
-
-        console.error(error)
-
-        status.textContent =
-            '❌ Fehler: ' + error.message
-
-        return
-
-    }
-
-
-    const einladungslink =
-        `${window.location.origin}${window.location.pathname}?invite=${einladungscode}`
-
-
-    status.innerHTML = `
-        ✅ Termin wurde gespeichert!<br><br>
-
-        🔗 <strong>Einladungslink:</strong><br>
-
-        <input
-            type="text"
-            value="${einladungslink}"
-            readonly
-            style="width:100%;"
-        >
-
-        <br><br>
-
-        <button
-            type="button"
-            id="linkKopieren"
-        >
-            📋 Link kopieren
-        </button>
-    `
-
-
-    document
-        .getElementById('linkKopieren')
-        .addEventListener('click', async () => {
-
-            try {
-
-                await navigator.clipboard.writeText(
-                    einladungslink
-                )
-
-                document.getElementById(
-                    'linkKopieren'
-                ).textContent =
-                    '✅ Link kopiert!'
-
-            } catch {
-
-                alert(
-                    'Der Link konnte nicht automatisch kopiert werden.'
-                )
-
-            }
-
-        })
-
-
-    form.reset()
-
-    ausgewählteBreitengrad = null
-    ausgewählteLaengengrad = null
-
-})
-
-
-/* =========================
-   KALENDER
-========================= */
-
-const daysContainer =
-    document.getElementById('days')
-
-const monthYear =
-    document.getElementById('monthYear')
-
-const prevMonth =
-    document.getElementById('prevMonth')
-
-const nextMonth =
-    document.getElementById('nextMonth')
-
-const datumInput =
-    document.getElementById('datum')
-
-const datumToggle =
-    document.getElementById('datumToggle')
-
-const calendar =
-    document.getElementById('calendar')
-
-
-datumToggle.addEventListener('click', () => {
-
-    calendar.classList.toggle('open')
-
-    if (calendar.classList.contains('open')) {
-
-        datumToggle.textContent =
-            '📅 Kalender schließen'
-
-    } else {
-
-        datumToggle.textContent =
-            '📅 Kalender öffnen'
-
-    }
-
-})
-
-
-let currentDate = new Date()
-
-
-function renderCalendar() {
-
-    daysContainer.innerHTML = ''
-
-    const year =
-        currentDate.getFullYear()
-
-    const month =
-        currentDate.getMonth()
-
+    const inviteCode = new URLSearchParams(location.search).get('invite');
 
     const monthNames = [
-        'Januar',
-        'Februar',
-        'März',
-        'April',
-        'Mai',
-        'Juni',
-        'Juli',
-        'August',
-        'September',
-        'Oktober',
-        'November',
-        'Dezember'
-    ]
+        'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+        'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
+    ];
 
+    const today = new Date();
+    let shownYear = today.getFullYear();
+    let shownMonth = today.getMonth();
+    let selectedDate = '';
+    let appointments = [];
+    let map = null;
+    let marker = null;
+    let latitude = null;
+    let longitude = null;
 
-    monthYear.textContent =
-        `${monthNames[month]} ${year}`
-
-
-    const firstDay =
-        new Date(year, month, 1)
-
-    const lastDay =
-        new Date(year, month + 1, 0)
-
-
-    let startDay =
-        firstDay.getDay()
-
-    if (startDay === 0) {
-        startDay = 7
-    }
-
-
-    for (
-        let i = 1;
-        i < startDay;
-        i++
-    ) {
-
-        const emptyDay =
-            document.createElement('div')
-
-        daysContainer.appendChild(
-            emptyDay
-        )
-
-    }
-
-
-    for (
-        let day = 1;
-        day <= lastDay.getDate();
-        day++
-    ) {
-
-        const dayElement =
-            document.createElement('button')
-
-        dayElement.textContent = day
-
-        dayElement.type = 'button'
-
-
-        dayElement.addEventListener(
-            'click',
-            () => {
-
-                const selectedDate =
-                    `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-
-
-                datumInput.value =
-                    selectedDate
-
-
-                document
-                    .querySelectorAll('#days button')
-                    .forEach(button => {
-
-                        button.classList.remove(
-                            'selected'
-                        )
-
-                    })
-
-
-                dayElement.classList.add(
-                    'selected'
-                )
-
-
-                calendar.classList.remove(
-                    'open'
-                )
-
-                datumToggle.textContent =
-                    '📅 Kalender öffnen'
-
-            }
-        )
-
-
-        daysContainer.appendChild(
-            dayElement
-        )
-
-    }
-
-}
-
-
-prevMonth.addEventListener('click', () => {
-
-    currentDate.setMonth(
-        currentDate.getMonth() - 1
-    )
-
-    renderCalendar()
-
-})
-
-
-nextMonth.addEventListener('click', () => {
-
-    currentDate.setMonth(
-        currentDate.getMonth() + 1
-    )
-
-    renderCalendar()
-
-})
-
-
-renderCalendar()
-
-
-/* =========================
-   TERMINE IM KALENDER
-========================= */
-
-async function loadAppointments() {
-
-    const { data, error } =
-        await supabase
-            .from('Terminplaner')
-            .select(
-                'Titel, Beschreibung, Datum, Uhrzeit, Ort'
-            )
-
-
-    if (error) {
-
-        console.error(error)
-
-        return
-
-    }
-
-
-    data.forEach(termin => {
-
-        const [
+    function dateKey(year, month, day) {
+        return [
             year,
-            month,
-            day
-        ] = termin.Datum.split('-')
+            String(month + 1).padStart(2, '0'),
+            String(day).padStart(2, '0')
+        ].join('-');
+    }
 
+    function formatDate(value) {
+        if (!value) return 'Nicht angegeben';
 
-        if (
-            Number(year) ===
-                currentDate.getFullYear()
-            &&
-            Number(month) - 1 ===
-                currentDate.getMonth()
-        ) {
+        const parts = value.slice(0, 10).split('-');
+        if (parts.length !== 3) return value;
 
-            const buttons =
-                document.querySelectorAll(
-                    '#days button'
-                )
+        return `${parts[2]}.${parts[1]}.${parts[0]}`;
+    }
 
+    function formatTime(value) {
+        return value ? String(value).slice(0, 5) : 'Nicht angegeben';
+    }
 
-            buttons.forEach(button => {
+    function escapeText(value) {
+        return String(value ?? '');
+    }
 
-                if (
-                    Number(button.textContent)
-                    === Number(day)
-                ) {
+    function setStatus(message, isError = false) {
+        statusElement.textContent = message;
+        statusElement.style.color = isError ? '#ff8794' : '#a9e8bb';
+    }
 
-                    button.classList.add(
-                        'has-appointment'
-                    )
+    function renderCalendar() {
+        $('monthYear').textContent =
+            `${monthNames[shownMonth]} ${shownYear}`;
 
-                    button.title =
-                        `${termin.Titel} – ${termin.Uhrzeit}`
+        const daysElement = $('days');
+        daysElement.replaceChildren();
 
-                }
+        const firstWeekday =
+            (new Date(shownYear, shownMonth, 1).getDay() + 6) % 7;
 
-            })
+        const numberOfDays =
+            new Date(shownYear, shownMonth + 1, 0).getDate();
 
+        for (let i = 0; i < firstWeekday; i++) {
+            const empty = document.createElement('div');
+            empty.className = 'day empty';
+            daysElement.appendChild(empty);
         }
 
-    })
+        for (let day = 1; day <= numberOfDays; day++) {
+            const key = dateKey(shownYear, shownMonth, day);
+            const button = document.createElement('button');
 
-}
+            button.type = 'button';
+            button.className = 'day';
+            button.textContent = day;
 
+            if (key === selectedDate) button.classList.add('selected');
+            if (key === dateKey(today.getFullYear(), today.getMonth(), today.getDate())) {
+                button.classList.add('today');
+            }
 
-loadAppointments()
-/* =========================
-   EINLADUNG ANZEIGEN
-========================= */
+            if (appointments.some(item =>
+                item.Datum && item.Datum.slice(0, 10) === key
+            )) {
+                button.classList.add('has-appointment');
+            }
 
-const inviteCode =
-    new URLSearchParams(window.location.search).get('invite')
-    alert("Invite-Code: " + inviteCode)
+            button.addEventListener('click', () => {
+                selectedDate = key;
+                dateInput.value = key;
+                renderCalendar();
+            });
 
+            daysElement.appendChild(button);
+        }
 
-if (inviteCode) {
+        renderAppointmentList();
+    }
 
-    const { data, error } =
-        await supabase
-            .from('Terminplaner')
-            .select(
-                'Titel, Beschreibung, Datum, Uhrzeit, Ort, Breitengrad, Laengengrad'
+    function renderAppointmentList() {
+        const list = $('appointmentList');
+        list.replaceChildren();
+
+        const monthAppointments = appointments.filter(item => {
+            if (!item.Datum) return false;
+            const date = item.Datum.slice(0, 10);
+            return date.startsWith(
+                `${shownYear}-${String(shownMonth + 1).padStart(2, '0')}`
+            );
+        });
+
+        monthAppointments.sort((a, b) =>
+            `${a.Datum} ${a.Uhrzeit || ''}`.localeCompare(
+                `${b.Datum} ${b.Uhrzeit || ''}`
             )
-            .eq('Einladungscode', inviteCode)
-            .single()
+        );
 
-    if (error || !data) {
+        if (monthAppointments.length === 0) {
+            list.textContent = 'Für diesen Monat sind noch keine Termine vorhanden.';
+            return;
+        }
 
-        document.getElementById('einladung').style.display = 'block'
+        for (const item of monthAppointments) {
+            const card = document.createElement('article');
+            card.className = 'appointment';
 
-        document.getElementById('einladungTitel').textContent =
-            '❌ Termin nicht gefunden'
+            const title = document.createElement('h3');
+            title.textContent = escapeText(item.Titel || 'Termin');
 
-        document.getElementById('einladungBeschreibung').textContent =
-            'Der Einladungslink ist ungültig oder abgelaufen.'
+            const details = document.createElement('p');
+            details.textContent =
+                `${formatDate(item.Datum)} · ${formatTime(item.Uhrzeit)}`;
 
-    } else {
+            const place = document.createElement('p');
+            place.textContent = `Ort: ${item.Ort || 'Nicht angegeben'}`;
 
-        document.getElementById('calendar').style.display = 'none'
-        document.getElementById('terminForm').style.display = 'none'
-        document.querySelector('body > h2').style.display = 'none'
+            card.append(title, details, place);
+            list.appendChild(card);
+        }
+    }
 
-        document.getElementById('einladung').style.display = 'block'
+    async function loadAppointments() {
+        $('appointmentList').textContent = 'Termine werden geladen ...';
 
-        document.getElementById('einladungTitel').textContent =
-            data.Titel
-
-        document.getElementById('einladungBeschreibung').textContent =
-            data.Beschreibung || ''
-
-        document.getElementById('einladungDatum').textContent =
-            data.Datum
-
-        document.getElementById('einladungUhrzeit').textContent =
-            data.Uhrzeit
-
-        document.getElementById('einladungOrt').textContent =
-            data.Ort || 'Kein Ort angegeben'
-            const teilnehmenButton =
-    document.getElementById('teilnehmenButton')
-
-teilnehmenButton.addEventListener('click', async () => {
-
-    const istDabei =
-        teilnehmenButton.dataset.dabei === 'true'
-
-    const neuerStatus =
-        istDabei ? 'Nicht dabei' : 'Dabei'
-
-    const { error } =
-        await supabase
+        const { data, error } = await supabase
             .from('Terminplaner')
-            .update({
-                Teilnehmer: neuerStatus
-            })
-            .eq('Einladungscode', inviteCode)
+            .select('Titel, Beschreibung, Datum, Uhrzeit, Ort, Einladungscode')
+            .order('Datum', { ascending: true });
 
-    if (error) {
+        if (error) {
+            console.error('Fehler beim Laden der Termine:', error);
+            $('appointmentList').textContent =
+                'Termine konnten nicht geladen werden. Prüfe die SELECT-Berechtigung in Supabase.';
+            return;
+        }
 
-        console.error(error)
-
-        alert('Fehler beim Speichern.')
-
-        return
+        appointments = data || [];
+        renderCalendar();
     }
 
-    if (istDabei) {
+    function initMap() {
+        if (typeof L === 'undefined') {
+            $('mapStatus').textContent = 'Die Karte konnte nicht geladen werden.';
+            return;
+        }
 
-        teilnehmenButton.textContent =
-            '✅ Ich nehme teil'
+        map = L.map('map').setView([51.3, 12.4], 8);
 
-        teilnehmenButton.dataset.dabei =
-            'false'
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap-Mitwirkende',
+            maxZoom: 19
+        }).addTo(map);
 
+        map.on('click', event => {
+            setMapLocation(event.latlng.lat, event.latlng.lng);
+            $('mapStatus').textContent =
+                'Kartenposition ausgewählt. Die Koordinaten werden gespeichert.';
+        });
+
+        setTimeout(() => map.invalidateSize(), 200);
+    }
+
+    function setMapLocation(lat, lng) {
+        latitude = Number(lat);
+        longitude = Number(lng);
+
+        if (marker) {
+            marker.setLatLng([latitude, longitude]);
+        } else if (map) {
+            marker = L.marker([latitude, longitude]).addTo(map);
+        }
+
+        if (map) map.setView([latitude, longitude], 15);
+    }
+
+    async function searchPlace() {
+        const query = $('mapSearch').value.trim();
+
+        if (!query) {
+            $('mapStatus').textContent = 'Bitte gib eine Adresse ein.';
+            return;
+        }
+
+        $('searchPlace').disabled = true;
+        $('mapStatus').textContent = 'Adresse wird gesucht ...';
+
+        try {
+            const url = new URL('https://nominatim.openstreetmap.org/search');
+            url.searchParams.set('q', query);
+            url.searchParams.set('format', 'json');
+            url.searchParams.set('limit', '1');
+
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Die Adresssuche ist fehlgeschlagen.');
+
+            const results = await response.json();
+
+            if (!results.length) {
+                $('mapStatus').textContent = 'Keine passende Adresse gefunden.';
+                return;
+            }
+
+            const result = results[0];
+            setMapLocation(Number(result.lat), Number(result.lon));
+
+            $('ort').value = result.display_name;
+            $('mapStatus').textContent = 'Adresse gefunden und ausgewählt.';
+        } catch (error) {
+            $('mapStatus').textContent =
+                error.message || 'Fehler bei der Adresssuche.';
+        } finally {
+            $('searchPlace').disabled = false;
+        }
+    }
+
+    $('searchPlace').addEventListener('click', searchPlace);
+
+    $('mapSearch').addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            searchPlace();
+        }
+    });
+
+    $('prevMonth').addEventListener('click', () => {
+        shownMonth--;
+
+        if (shownMonth < 0) {
+            shownMonth = 11;
+            shownYear--;
+        }
+
+        renderCalendar();
+    });
+
+    $('nextMonth').addEventListener('click', () => {
+        shownMonth++;
+
+        if (shownMonth > 11) {
+            shownMonth = 0;
+            shownYear++;
+        }
+
+        renderCalendar();
+    });
+
+    dateInput.addEventListener('change', () => {
+        if (!dateInput.value) return;
+
+        selectedDate = dateInput.value;
+        const parts = selectedDate.split('-').map(Number);
+
+        shownYear = parts[0];
+        shownMonth = parts[1] - 1;
+
+        renderCalendar();
+    });
+
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+
+        const titel = $('titel').value.trim();
+        const beschreibung = $('beschreibung').value.trim();
+        const datum = dateInput.value;
+        const uhrzeit = $('uhrzeit').value;
+        const ort = $('ort').value.trim();
+
+        if (!titel || !datum || !uhrzeit) {
+            setStatus('Bitte fülle alle Pflichtfelder aus.', true);
+            return;
+        }
+
+        createButton.disabled = true;
+        createButton.textContent = 'Wird gespeichert ...';
+        setStatus('');
+
+        $('createdResult').hidden = true;
+
+        const invitationCode = crypto.randomUUID()
+            .replaceAll('-', '')
+            .slice(0, 12)
+            .toUpperCase();
+
+        const newAppointment = {
+            Titel: titel,
+            Beschreibung: beschreibung || null,
+            Datum: datum,
+            Uhrzeit: uhrzeit,
+            Ort: ort || null,
+            Einladungscode: invitationCode
+        };
+
+        // Koordinaten werden nur mitgeschickt, wenn ein Kartenpunkt gewählt wurde.
+        if (latitude !== null && longitude !== null) {
+            newAppointment.Breitengrad = latitude;
+            newAppointment.Laengengrad = longitude;
+        }
+
+        try {
+            const { error } = await supabase
+                .from('Terminplaner')
+                .insert(newAppointment);
+
+            if (error) throw error;
+
+            const inviteUrl = new URL(window.location.href);
+            inviteUrl.search = '';
+            inviteUrl.hash = '';
+            inviteUrl.searchParams.set('invite', invitationCode);
+
+            $('createdLink').value = inviteUrl.href;
+            $('createdResult').hidden = false;
+
+            setStatus('Termin wurde gespeichert.');
+            form.reset();
+
+            latitude = null;
+            longitude = null;
+
+            if (marker && map) {
+                map.removeLayer(marker);
+                marker = null;
+            }
+
+            selectedDate = '';
+            await loadAppointments();
+        } catch (error) {
+            console.error('Fehler beim Erstellen:', error);
+            setStatus(
+                'Fehler beim Speichern: ' + (error.message || 'Unbekannter Fehler'),
+                true
+            );
+        } finally {
+            createButton.disabled = false;
+            createButton.textContent = 'Termin erstellen';
+        }
+    });
+
+    $('copyLink').addEventListener('click', async () => {
+        const link = $('createdLink').value;
+
+        try {
+            await navigator.clipboard.writeText(link);
+            $('copyLink').textContent = 'Kopiert!';
+        } catch {
+            $('createdLink').focus();
+            $('createdLink').select();
+            document.execCommand('copy');
+            $('copyLink').textContent = 'Kopiert!';
+        }
+
+        setTimeout(() => {
+            $('copyLink').textContent = 'Link kopieren';
+        }, 1800);
+    });
+
+    async function loadInvitation(code) {
+        $('mainView').hidden = true;
+        $('inviteView').hidden = false;
+
+        $('inviteTitle').textContent = 'Termin wird geladen ...';
+        $('inviteDescription').textContent = '';
+        $('inviteStatus').textContent = '';
+
+        const { data, error } = await supabase
+            .from('Terminplaner')
+            .select('Titel, Beschreibung, Datum, Uhrzeit, Ort, Einladungscode')
+            .eq('Einladungscode', code)
+            .maybeSingle();
+
+        if (error) {
+            console.error('Einladungsfehler:', error);
+            $('inviteTitle').textContent = 'Fehler beim Laden';
+            $('inviteStatus').textContent =
+                error.message + ' — Prüfe die SELECT-Berechtigung in Supabase.';
+            return;
+        }
+
+        if (!data) {
+            $('inviteTitle').textContent = 'Termin nicht gefunden';
+            $('inviteStatus').textContent =
+                'Der Einladungscode wurde nicht gefunden. Prüfe den Link und den Eintrag in Supabase.';
+            return;
+        }
+
+        $('inviteTitle').textContent = data.Titel || 'Termin';
+        $('inviteDescription').textContent =
+            data.Beschreibung || 'Keine Beschreibung vorhanden.';
+        $('inviteDate').textContent = formatDate(data.Datum);
+        $('inviteTime').textContent = formatTime(data.Uhrzeit);
+        $('invitePlace').textContent = data.Ort || 'Kein Ort angegeben';
+    }
+
+    $('backButton').addEventListener('click', () => {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('invite');
+        window.location.href = url.href;
+    });
+
+    if (inviteCode) {
+        loadInvitation(inviteCode.trim()).catch(error => {
+            console.error(error);
+            $('inviteTitle').textContent = 'Fehler beim Laden';
+            $('inviteStatus').textContent =
+                error.message || 'Unbekannter Fehler.';
+        });
     } else {
-
-        teilnehmenButton.textContent =
-            '❌ Ich nehme nicht teil'
-
-        teilnehmenButton.dataset.dabei =
-            'true'
-
+        initMap();
+        loadAppointments();
     }
-
-})
-
-}
-}
 </script>
-
 </body>
 </html>
